@@ -22,6 +22,7 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   const t = useT();
+  const lang = (typeof window !== "undefined" && (localStorage.getItem("salon-lang") ? JSON.parse(localStorage.getItem("salon-lang")!).state?.lang : "en")) || "en";
   const features = [
     { icon: Scissors, title: t("services"), desc: { en: "Track every service & auto-calc commission", rw: "Andika serivisi & ubare komisiyo" }},
     { icon: Users, title: t("workers"), desc: { en: "Manage staff & payment types", rw: "Yobora abakozi & uburyo bw'ubwishyu" }},
