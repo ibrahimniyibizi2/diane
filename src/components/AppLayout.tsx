@@ -54,7 +54,7 @@ export function AppLayout() {
             return (
               <Link
                 key={it.to}
-                to={it.to}
+                to={it.to as string}
                 className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
                   active ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted"
                 }`}
@@ -121,7 +121,7 @@ export function AppLayout() {
           {items.slice(0, 5).map((it) => {
             const active = it.exact ? pathname === it.to : pathname.startsWith(it.to);
             return (
-              <Link key={it.to} to={it.to} className={`flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] ${active ? "text-primary" : "text-muted-foreground"}`}>
+              <Link key={it.to} to={it.to as string} className={`flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] ${active ? "text-primary" : "text-muted-foreground"}`}>
                 <it.icon className="h-5 w-5" />
                 {it.label}
               </Link>
