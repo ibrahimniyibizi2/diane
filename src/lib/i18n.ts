@@ -103,6 +103,13 @@ const dict = {
   noAccount: { en: "No account?", rw: "Nta konti ufite?" },
   haveAccount: { en: "Have an account?", rw: "Ufite konti?" },
   demoLogin: { en: "Use any email/password (demo mode)", rw: "Koresha email iyo ari yo yose (demo)" },
+  // Shift report
+  shiftReport: { en: "Shift report", rw: "Raporo y'igihe cy'akazi" },
+  shiftSummary: { en: "Shift summary", rw: "Incamake y'igihe" },
+  duration: { en: "Duration", rw: "Igihe cyamaze" },
+  history: { en: "History", rw: "Amateka" },
+  viewReport: { en: "View report", rw: "Reba raporo" },
+  hide: { en: "Hide", rw: "Hisha" },
 } as const;
 
 export type TKey = keyof typeof dict;
