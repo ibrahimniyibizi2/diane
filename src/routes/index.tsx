@@ -66,7 +66,7 @@ function Landing() {
               <f.icon className="h-5 w-5 text-accent-foreground" />
             </div>
             <h3 className="font-semibold mb-1">{f.title}</h3>
-            <p className="text-sm text-muted-foreground">{useT()("appName") === "Salon Manager" ? f.desc.en : f.desc.rw}</p>
+            <p className="text-sm text-muted-foreground">{f.desc[lang]}</p>
           </div>
         ))}
       </section>
