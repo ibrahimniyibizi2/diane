@@ -110,6 +110,17 @@ const dict = {
   history: { en: "History", rw: "Amateka" },
   viewReport: { en: "View report", rw: "Reba raporo" },
   hide: { en: "Hide", rw: "Hisha" },
+  exportPdf: { en: "Export PDF", rw: "Kuramo PDF" },
+  filter: { en: "Filter", rw: "Shungura" },
+  allTime: { en: "All time", rw: "Igihe cyose" },
+  today: { en: "Today", rw: "Uyu munsi" },
+  thisWeek: { en: "This week", rw: "Iki cyumweru" },
+  thisMonth: { en: "This month", rw: "Uku kwezi" },
+  custom: { en: "Custom", rw: "Hitamo" },
+  from: { en: "From", rw: "Kuva" },
+  to: { en: "To", rw: "Kugeza" },
+  reset: { en: "Reset", rw: "Subiramo" },
+  noResults: { en: "No shifts in this range", rw: "Nta gihe kibonetse" },
 } as const;
 
 export type TKey = keyof typeof dict;

@@ -3,14 +3,26 @@ import { useAuth, useData, type Shift } from "@/lib/store";
 import { formatRWF, useT } from "@/lib/i18n";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, Play, Square, Mail, MessageCircle, FileBarChart, ChevronDown, ChevronUp } from "lucide-react";
-import { format, formatDistanceStrict } from "date-fns";
+import {
+  Clock, Play, Square, Mail, MessageCircle, FileBarChart,
+  ChevronDown, ChevronUp, FileDown, CalendarIcon, X,
+} from "lucide-react";
+import {
+  format, formatDistanceStrict, startOfDay, endOfDay,
+  startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval,
+} from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import jsPDF from "jspdf";
 
 export const Route = createFileRoute("/app/shifts")({
   component: ShiftsPage,
 });
+
+type RangePreset = "all" | "today" | "week" | "month" | "custom";
 
 function ShiftsPage() {
   const t = useT();
@@ -23,6 +35,10 @@ function ShiftsPage() {
   const closeShift = useData((s) => s.closeShift);
   const current = useData((s) => s.currentShift());
   const [expanded, setExpanded] = useState<string | null>(null);
+
+  const [preset, setPreset] = useState<RangePreset>("all");
+  const [fromDate, setFromDate] = useState<Date | undefined>();
+  const [toDate, setToDate] = useState<Date | undefined>();
 
   const buildShiftSummary = (shift: Shift) => {
     const sServices = services.filter((s) => s.shiftId === shift.id);
@@ -73,7 +89,109 @@ function ShiftsPage() {
     window.open(`https://wa.me/?text=${encodeURIComponent(buildText(shift))}`, "_blank");
   };
 
+  const exportPdf = (shift: Shift) => {
+    const sum = buildShiftSummary(shift);
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const W = doc.internal.pageSize.getWidth();
+    let y = 56;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.text(t("shiftReport"), 40, y);
+    y += 24;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(110);
+    doc.text(`${t("openedAt")}: ${format(new Date(shift.openedAt), "MMM d, yyyy HH:mm")}`, 40, y);
+    y += 14;
+    doc.text(`${t("closedAt")}: ${shift.closedAt ? format(new Date(shift.closedAt), "MMM d, yyyy HH:mm") : "—"}`, 40, y);
+    y += 22;
+
+    doc.setDrawColor(220);
+    doc.line(40, y, W - 40, y);
+    y += 22;
+
+    doc.setTextColor(20);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text(t("shiftSummary"), 40, y);
+    y += 18;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    const rows: [string, string][] = [
+      [t("totalServices"), String(sum.sServices.length)],
+      [t("totalEarned"), formatRWF(sum.income)],
+      [t("totalSpent"), formatRWF(sum.expense)],
+      [t("profit"), formatRWF(sum.profit)],
+    ];
+    rows.forEach(([k, v]) => {
+      doc.setTextColor(110);
+      doc.text(k, 40, y);
+      doc.setTextColor(20);
+      doc.text(v, W - 40, y, { align: "right" });
+      y += 16;
+    });
+
+    y += 12;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text(t("byWorker"), 40, y);
+    y += 8;
+    doc.setDrawColor(220);
+    doc.line(40, y, W - 40, y);
+    y += 16;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    if (sum.byWorker.length === 0) {
+      doc.setTextColor(140);
+      doc.text("—", 40, y);
+    } else {
+      sum.byWorker.forEach((b) => {
+        if (y > 780) { doc.addPage(); y = 56; }
+        doc.setTextColor(20);
+        doc.text(`${b.worker.name}  (${b.count})`, 40, y);
+        doc.text(`${formatRWF(b.total)}`, W - 160, y, { align: "right" });
+        doc.setTextColor(120);
+        doc.text(`${t("commissionAmount")}: ${formatRWF(b.commission)}`, W - 40, y, { align: "right" });
+        y += 16;
+      });
+    }
+
+    doc.setFontSize(8);
+    doc.setTextColor(160);
+    doc.text(`Generated ${format(new Date(), "MMM d, yyyy HH:mm")}`, 40, 820);
+
+    const fname = `shift-${format(new Date(shift.openedAt), "yyyy-MM-dd-HHmm")}.pdf`;
+    doc.save(fname);
+  };
+
+  const range = useMemo(() => {
+    const now = new Date();
+    if (preset === "today") return { start: startOfDay(now), end: endOfDay(now) };
+    if (preset === "week") return { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) };
+    if (preset === "month") return { start: startOfMonth(now), end: endOfMonth(now) };
+    if (preset === "custom" && fromDate && toDate) return { start: startOfDay(fromDate), end: endOfDay(toDate) };
+    return null;
+  }, [preset, fromDate, toDate]);
+
+  const filteredShifts = useMemo(() => {
+    const sorted = shifts.slice().reverse();
+    if (!range) return sorted;
+    return sorted.filter((s) => isWithinInterval(new Date(s.openedAt), range));
+  }, [shifts, range]);
+
   const currentSum = current ? buildShiftSummary(current) : null;
+
+  const presets: { key: RangePreset; label: string }[] = [
+    { key: "all", label: t("allTime") },
+    { key: "today", label: t("today") },
+    { key: "week", label: t("thisWeek") },
+    { key: "month", label: t("thisMonth") },
+    { key: "custom", label: t("custom") },
+  ];
 
   return (
     <div className="space-y-6">
@@ -120,18 +238,47 @@ function ShiftsPage() {
               ))}
             </div>
           )}
-          <div className="flex gap-2 mt-4">
+          <div className="flex flex-wrap gap-2 mt-4">
             <Button variant="outline" size="sm" className="gap-2" onClick={() => sendEmail(current)}><Mail className="h-4 w-4" />{t("sendEmail")}</Button>
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => exportPdf(current)}><FileDown className="h-4 w-4" />{t("exportPdf")}</Button>
             <Button size="sm" className="gap-2 bg-success text-success-foreground hover:bg-success/90" onClick={() => sendWhatsApp(current)}><MessageCircle className="h-4 w-4" />{t("sendWhatsApp")}</Button>
           </div>
         </Card>
       )}
 
-      <div className="space-y-2">
-        <h2 className="font-semibold">{t("history")}</h2>
-        {shifts.length === 0 ? (
-          <Card className="p-8 text-center text-muted-foreground">—</Card>
-        ) : shifts.slice().reverse().map((s) => {
+      <div className="space-y-3">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <h2 className="font-semibold">{t("history")}</h2>
+          <div className="text-xs text-muted-foreground">{filteredShifts.length} / {shifts.length}</div>
+        </div>
+
+        <Card className="p-3 flex flex-wrap items-center gap-2">
+          {presets.map((p) => (
+            <Button
+              key={p.key}
+              size="sm"
+              variant={preset === p.key ? "default" : "outline"}
+              onClick={() => setPreset(p.key)}
+            >
+              {p.label}
+            </Button>
+          ))}
+          {preset === "custom" && (
+            <>
+              <DatePick label={t("from")} value={fromDate} onChange={setFromDate} />
+              <DatePick label={t("to")} value={toDate} onChange={setToDate} />
+            </>
+          )}
+          {(preset !== "all" || fromDate || toDate) && (
+            <Button size="sm" variant="ghost" className="gap-1" onClick={() => { setPreset("all"); setFromDate(undefined); setToDate(undefined); }}>
+              <X className="h-3.5 w-3.5" />{t("reset")}
+            </Button>
+          )}
+        </Card>
+
+        {filteredShifts.length === 0 ? (
+          <Card className="p-8 text-center text-muted-foreground">{shifts.length === 0 ? "—" : t("noResults")}</Card>
+        ) : filteredShifts.map((s) => {
           const isOpen = expanded === s.id;
           const sum = buildShiftSummary(s);
           const dur = s.closedAt
@@ -146,10 +293,15 @@ function ShiftsPage() {
                     {format(new Date(s.openedAt), "HH:mm")} → {s.closedAt ? format(new Date(s.closedAt), "HH:mm") : "—"} · {dur}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Badge variant={s.status === "open" ? "default" : "secondary"}>
                     {s.status === "open" ? t("shiftOpen") : t("shiftClosed")}
                   </Badge>
+                  {s.status === "closed" && (
+                    <Button variant="outline" size="sm" className="gap-1" onClick={() => exportPdf(s)}>
+                      <FileDown className="h-4 w-4" />PDF
+                    </Button>
+                  )}
                   <Button variant="ghost" size="sm" className="gap-1" onClick={() => setExpanded(isOpen ? null : s.id)}>
                     {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     {isOpen ? t("hide") : t("viewReport")}
@@ -174,8 +326,9 @@ function ShiftsPage() {
                       ))}
                     </div>
                   )}
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button variant="outline" size="sm" className="gap-2" onClick={() => sendEmail(s)}><Mail className="h-4 w-4" />{t("sendEmail")}</Button>
+                    <Button variant="outline" size="sm" className="gap-2" onClick={() => exportPdf(s)}><FileDown className="h-4 w-4" />{t("exportPdf")}</Button>
                     <Button size="sm" className="gap-2 bg-success text-success-foreground hover:bg-success/90" onClick={() => sendWhatsApp(s)}><MessageCircle className="h-4 w-4" />{t("sendWhatsApp")}</Button>
                   </div>
                 </div>
@@ -185,6 +338,22 @@ function ShiftsPage() {
         })}
       </div>
     </div>
+  );
+}
+
+function DatePick({ label, value, onChange }: { label: string; value: Date | undefined; onChange: (d: Date | undefined) => void }) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" className={cn("gap-2", !value && "text-muted-foreground")}>
+          <CalendarIcon className="h-4 w-4" />
+          {value ? format(value, "MMM d, yyyy") : label}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar mode="single" selected={value} onSelect={onChange} initialFocus className={cn("p-3 pointer-events-auto")} />
+      </PopoverContent>
+    </Popover>
   );
 }
 
