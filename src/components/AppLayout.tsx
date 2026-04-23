@@ -24,7 +24,7 @@ export function AppLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const currentShift = useData((s) => s.currentShift());
 
-  const items = [
+  const items: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
     { to: "/app", label: t("dashboard"), icon: LayoutDashboard, exact: true },
     { to: "/app/services", label: t("services"), icon: Scissors },
     { to: "/app/workers", label: t("workers"), icon: Users },
@@ -32,7 +32,7 @@ export function AppLayout() {
     { to: "/app/cash", label: t("cash"), icon: Wallet },
     { to: "/app/shifts", label: t("shifts"), icon: Clock },
     { to: "/app/reports", label: t("reports"), icon: FileBarChart },
-  ] as const;
+  ];
 
   return (
     <div className="min-h-screen bg-background flex">
