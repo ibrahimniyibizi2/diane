@@ -1,6 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useAuth } from "@/lib/store";
-import { useT } from "@/lib/i18n";
+import { useT, useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { LangToggle } from "@/components/LangToggle";
 import { Sparkles, Scissors, Users, Wallet, FileBarChart } from "lucide-react";
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   const t = useT();
-  const lang = (typeof window !== "undefined" && (localStorage.getItem("salon-lang") ? JSON.parse(localStorage.getItem("salon-lang")!).state?.lang : "en")) || "en";
+  const lang = useI18n((s) => s.lang);
   const features = [
     { icon: Scissors, title: t("services"), desc: { en: "Track every service & auto-calc commission", rw: "Andika serivisi & ubare komisiyo" }},
     { icon: Users, title: t("workers"), desc: { en: "Manage staff & payment types", rw: "Yobora abakozi & uburyo bw'ubwishyu" }},
