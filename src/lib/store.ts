@@ -298,6 +298,3 @@ export const useData = create<DataState>()(
     { name: "salon-data" }
   )
 );
-    { name: "salon-data" }
-  )
-);
