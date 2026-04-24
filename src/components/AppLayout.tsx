@@ -13,6 +13,7 @@ import {
   FileBarChart,
   LogOut,
   Sparkles,
+  ShoppingCart,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -26,6 +27,7 @@ export function AppLayout() {
 
   const items: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
     { to: "/app", label: t("dashboard"), icon: LayoutDashboard, exact: true },
+    { to: "/app/pos", label: t("pos"), icon: ShoppingCart },
     { to: "/app/services", label: t("services"), icon: Scissors },
     { to: "/app/workers", label: t("workers"), icon: Users },
     { to: "/app/products", label: t("products"), icon: Package },
