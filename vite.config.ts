@@ -21,7 +21,9 @@ export default defineConfig({
       }
     },
     plugins: [
-      nitro(),
+      nitro({
+        preset: 'vercel',
+      }),
       VitePWA({
         registerType: "autoUpdate",
         includeAssets: ["favicon.svg"],
