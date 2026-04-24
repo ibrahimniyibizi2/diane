@@ -127,7 +127,7 @@ const dict = {
   client: { en: "Client", rw: "Umukiriya" },
   clientName: { en: "Client name", rw: "Izina ry'umukiriya" },
   walkIn: { en: "Walk-in", rw: "Uwaje" },
-  worker: { en: "Worker", rw: "Umukozi" },
+  walkIn: { en: "Walk-in", rw: "Uwaje" },
   selectWorker: { en: "Select worker", rw: "Hitamo umukozi" },
   addService: { en: "Add service", rw: "Ongeraho serivisi" },
   addProductLine: { en: "Add product", rw: "Ongeraho igicuruzwa" },
