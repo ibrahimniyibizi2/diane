@@ -92,12 +92,35 @@ export const useAuth = create<AuthState>()(
   )
 );
 
+export interface SaleLineService {
+  serviceType: string;
+  amount: number;
+}
+export interface SaleLineProduct {
+  productId: string;
+  name: string;
+  unitPrice: number;
+  qty: number;
+}
+export interface Sale {
+  id: string;
+  clientName: string; // "Walk-in" if not specified
+  workerId: string;
+  services: SaleLineService[];
+  products: SaleLineProduct[];
+  total: number;
+  paymentMethod: "cash" | "mobile_money" | "card";
+  shiftId: string | null;
+  createdAt: string;
+}
+
 interface DataState {
   workers: Worker[];
   services: Service[];
   products: Product[];
   transactions: Transaction[];
   shifts: Shift[];
+  sales: Sale[];
   addWorker: (w: Omit<Worker, "id" | "createdAt">) => void;
   updateWorker: (id: string, w: Partial<Worker>) => void;
   removeWorker: (id: string) => void;
@@ -111,11 +134,12 @@ interface DataState {
   openShift: (userId: string) => void;
   closeShift: (userId: string) => void;
   currentShift: () => Shift | null;
+  addSale: (sale: Omit<Sale, "id" | "createdAt" | "shiftId" | "total">) => void;
 }
 
 const seedWorkers: Worker[] = [
-  { id: "w1", name: "Jean Bosco", phone: "+250788111222", role: "barber", commission: 40, paymentType: "daily", createdAt: new Date().toISOString() },
-  { id: "w2", name: "Aline Uwase", phone: "+250788333444", role: "trancista", commission: 50, paymentType: "weekly", createdAt: new Date().toISOString() },
+  { id: "w1", name: "Jean Bosco", phone: "+250788111222", role: "barber", payModel: "commission", commission: 40, salary: 0, paymentType: "daily", createdAt: new Date().toISOString() },
+  { id: "w2", name: "Aline Uwase", phone: "+250788333444", role: "trancista", payModel: "commission", commission: 50, salary: 0, paymentType: "weekly", createdAt: new Date().toISOString() },
 ];
 
 export const useData = create<DataState>()(
