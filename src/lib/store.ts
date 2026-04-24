@@ -298,7 +298,7 @@ export const useData = create<DataState>()(
     {
       name: "salon-data",
       version: 2,
-      migrate: (persisted: any) => {
+      migrate: (persisted: any, _version: number) => {
         if (!persisted) return persisted;
         if (Array.isArray(persisted.workers)) {
           persisted.workers = persisted.workers.map((w: any) => ({
