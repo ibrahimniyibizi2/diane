@@ -295,6 +295,21 @@ export const useData = create<DataState>()(
         }));
       },
     }),
-    { name: "salon-data" }
+    {
+      name: "salon-data",
+      version: 2,
+      migrate: (persisted: any) => {
+        if (!persisted) return persisted;
+        if (Array.isArray(persisted.workers)) {
+          persisted.workers = persisted.workers.map((w: any) => ({
+            payModel: "commission",
+            salary: 0,
+            ...w,
+          }));
+        }
+        if (!Array.isArray(persisted.sales)) persisted.sales = [];
+        return persisted;
+      },
+    }
   )
 );
