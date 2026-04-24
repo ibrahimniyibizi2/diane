@@ -153,6 +153,7 @@ export const useData = create<DataState>()(
       ],
       transactions: [],
       shifts: [],
+      sales: [],
       addWorker: (w) =>
         set((s) => ({
           workers: [...s.workers, { ...w, id: crypto.randomUUID(), createdAt: new Date().toISOString() }],
@@ -162,7 +163,10 @@ export const useData = create<DataState>()(
       removeWorker: (id) => set((s) => ({ workers: s.workers.filter((x) => x.id !== id) })),
       addService: (svc) => {
         const worker = get().workers.find((w) => w.id === svc.workerId);
-        const commissionAmount = worker ? Math.round((svc.amountCharged * worker.commission) / 100) : 0;
+        const commissionAmount =
+          worker && worker.payModel === "commission"
+            ? Math.round((svc.amountCharged * worker.commission) / 100)
+            : 0;
         const shift = get().currentShift();
         const newService: Service = {
           ...svc,
@@ -228,7 +232,72 @@ export const useData = create<DataState>()(
         }));
       },
       currentShift: () => get().shifts.find((s) => s.status === "open") ?? null,
+      addSale: (sale) => {
+        const worker = get().workers.find((w) => w.id === sale.workerId);
+        const shift = get().currentShift();
+        const servicesTotal = sale.services.reduce((a, b) => a + (b.amount || 0), 0);
+        const productsTotal = sale.products.reduce((a, b) => a + b.unitPrice * b.qty, 0);
+        const total = servicesTotal + productsTotal;
+        const saleId = crypto.randomUUID();
+        const now = new Date().toISOString();
+        const clientLabel = sale.clientName?.trim() || "Walk-in";
+
+        // Per-service Service rows (with commission for commission workers)
+        const newServiceRows: Service[] = sale.services.map((line) => {
+          const commissionAmount =
+            worker && worker.payModel === "commission"
+              ? Math.round((line.amount * worker.commission) / 100)
+              : 0;
+          return {
+            id: crypto.randomUUID(),
+            workerId: sale.workerId,
+            serviceType: line.serviceType,
+            amountCharged: line.amount,
+            paymentMethod: sale.paymentMethod,
+            materialCost: 0,
+            commissionAmount,
+            shiftId: shift?.id ?? null,
+            createdAt: now,
+          };
+        });
+
+        // Decrement product stock
+        const updatedProducts = get().products.map((p) => {
+          const line = sale.products.find((l) => l.productId === p.id);
+          return line ? { ...p, quantity: Math.max(0, p.quantity - line.qty) } : p;
+        });
+
+        // Single income transaction for the sale total
+        const newTx: Transaction = {
+          id: crypto.randomUUID(),
+          type: "income",
+          category: "sale",
+          amount: total,
+          description: `POS · ${clientLabel} · ${worker?.name ?? ""}`,
+          shiftId: shift?.id ?? null,
+          createdAt: now,
+        };
+
+        const newSale: Sale = {
+          ...sale,
+          id: saleId,
+          clientName: clientLabel,
+          total,
+          shiftId: shift?.id ?? null,
+          createdAt: now,
+        };
+
+        set((s) => ({
+          sales: [newSale, ...s.sales],
+          services: [...newServiceRows, ...s.services],
+          products: updatedProducts,
+          transactions: [newTx, ...s.transactions],
+        }));
+      },
     }),
+    { name: "salon-data" }
+  )
+);
     { name: "salon-data" }
   )
 );
