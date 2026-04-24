@@ -19,6 +19,7 @@ import { Route as AppShiftsRouteImport } from './routes/app.shifts'
 import { Route as AppServicesRouteImport } from './routes/app.services'
 import { Route as AppReportsRouteImport } from './routes/app.reports'
 import { Route as AppProductsRouteImport } from './routes/app.products'
+import { Route as AppPosRouteImport } from './routes/app.pos'
 import { Route as AppCashRouteImport } from './routes/app.cash'
 
 const SignupRoute = SignupRouteImport.update({
@@ -71,6 +72,11 @@ const AppProductsRoute = AppProductsRouteImport.update({
   path: '/products',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPosRoute = AppPosRouteImport.update({
+  id: '/pos',
+  path: '/pos',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppCashRoute = AppCashRouteImport.update({
   id: '/cash',
   path: '/cash',
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/app/cash': typeof AppCashRoute
+  '/app/pos': typeof AppPosRoute
   '/app/products': typeof AppProductsRoute
   '/app/reports': typeof AppReportsRoute
   '/app/services': typeof AppServicesRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/app/cash': typeof AppCashRoute
+  '/app/pos': typeof AppPosRoute
   '/app/products': typeof AppProductsRoute
   '/app/reports': typeof AppReportsRoute
   '/app/services': typeof AppServicesRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/app/cash': typeof AppCashRoute
+  '/app/pos': typeof AppPosRoute
   '/app/products': typeof AppProductsRoute
   '/app/reports': typeof AppReportsRoute
   '/app/services': typeof AppServicesRoute
@@ -124,6 +133,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/app/cash'
+    | '/app/pos'
     | '/app/products'
     | '/app/reports'
     | '/app/services'
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/app/cash'
+    | '/app/pos'
     | '/app/products'
     | '/app/reports'
     | '/app/services'
@@ -149,6 +160,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/app/cash'
+    | '/app/pos'
     | '/app/products'
     | '/app/reports'
     | '/app/services'
@@ -236,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProductsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/pos': {
+      id: '/app/pos'
+      path: '/pos'
+      fullPath: '/app/pos'
+      preLoaderRoute: typeof AppPosRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/cash': {
       id: '/app/cash'
       path: '/cash'
@@ -248,6 +267,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppCashRoute: typeof AppCashRoute
+  AppPosRoute: typeof AppPosRoute
   AppProductsRoute: typeof AppProductsRoute
   AppReportsRoute: typeof AppReportsRoute
   AppServicesRoute: typeof AppServicesRoute
@@ -258,6 +278,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppCashRoute: AppCashRoute,
+  AppPosRoute: AppPosRoute,
   AppProductsRoute: AppProductsRoute,
   AppReportsRoute: AppReportsRoute,
   AppServicesRoute: AppServicesRoute,
