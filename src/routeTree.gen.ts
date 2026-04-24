@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppWorkersRouteImport } from './routes/app.workers'
 import { Route as AppShiftsRouteImport } from './routes/app.shifts'
+import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppServicesRouteImport } from './routes/app.services'
 import { Route as AppReportsRouteImport } from './routes/app.reports'
 import { Route as AppProductsRouteImport } from './routes/app.products'
@@ -57,6 +58,11 @@ const AppShiftsRoute = AppShiftsRouteImport.update({
   path: '/shifts',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppServicesRoute = AppServicesRouteImport.update({
   id: '/services',
   path: '/services',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/app/products': typeof AppProductsRoute
   '/app/reports': typeof AppReportsRoute
   '/app/services': typeof AppServicesRoute
+  '/app/settings': typeof AppSettingsRoute
   '/app/shifts': typeof AppShiftsRoute
   '/app/workers': typeof AppWorkersRoute
   '/app/': typeof AppIndexRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/app/products': typeof AppProductsRoute
   '/app/reports': typeof AppReportsRoute
   '/app/services': typeof AppServicesRoute
+  '/app/settings': typeof AppSettingsRoute
   '/app/shifts': typeof AppShiftsRoute
   '/app/workers': typeof AppWorkersRoute
   '/app': typeof AppIndexRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/app/products': typeof AppProductsRoute
   '/app/reports': typeof AppReportsRoute
   '/app/services': typeof AppServicesRoute
+  '/app/settings': typeof AppSettingsRoute
   '/app/shifts': typeof AppShiftsRoute
   '/app/workers': typeof AppWorkersRoute
   '/app/': typeof AppIndexRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/app/products'
     | '/app/reports'
     | '/app/services'
+    | '/app/settings'
     | '/app/shifts'
     | '/app/workers'
     | '/app/'
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/app/products'
     | '/app/reports'
     | '/app/services'
+    | '/app/settings'
     | '/app/shifts'
     | '/app/workers'
     | '/app'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/app/products'
     | '/app/reports'
     | '/app/services'
+    | '/app/settings'
     | '/app/shifts'
     | '/app/workers'
     | '/app/'
@@ -227,6 +239,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppShiftsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/settings': {
+      id: '/app/settings'
+      path: '/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/services': {
       id: '/app/services'
       path: '/services'
@@ -271,6 +290,7 @@ interface AppRouteChildren {
   AppProductsRoute: typeof AppProductsRoute
   AppReportsRoute: typeof AppReportsRoute
   AppServicesRoute: typeof AppServicesRoute
+  AppSettingsRoute: typeof AppSettingsRoute
   AppShiftsRoute: typeof AppShiftsRoute
   AppWorkersRoute: typeof AppWorkersRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -282,6 +302,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppProductsRoute: AppProductsRoute,
   AppReportsRoute: AppReportsRoute,
   AppServicesRoute: AppServicesRoute,
+  AppSettingsRoute: AppSettingsRoute,
   AppShiftsRoute: AppShiftsRoute,
   AppWorkersRoute: AppWorkersRoute,
   AppIndexRoute: AppIndexRoute,
@@ -298,12 +319,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

@@ -14,6 +14,7 @@ import {
   LogOut,
   Sparkles,
   ShoppingCart,
+  Settings,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -34,6 +35,7 @@ export function AppLayout() {
     { to: "/app/cash", label: t("cash"), icon: Wallet },
     { to: "/app/shifts", label: t("shifts"), icon: Clock },
     { to: "/app/reports", label: t("reports"), icon: FileBarChart },
+    { to: "/app/settings", label: "Settings", icon: Settings },
   ];
 
   return (

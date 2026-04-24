@@ -1,10 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useData } from "@/lib/store";
+import { useSettings } from "@/lib/settings";
 import { formatRWF, useT } from "@/lib/i18n";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, MessageCircle, FileBarChart } from "lucide-react";
+import { Mail, MessageCircle, FileBarChart, FileDown, MessageSquare, Settings as SettingsIcon } from "lucide-react";
 import { isToday, format } from "date-fns";
+import { Link } from "@tanstack/react-router";
+import { toast } from "sonner";
+import { buildDailyReportPDF, buildReportText } from "@/lib/pdf";
 
 export const Route = createFileRoute("/app/reports")({
   component: ReportsPage,
@@ -15,10 +19,13 @@ function ReportsPage() {
   const services = useData((s) => s.services);
   const transactions = useData((s) => s.transactions);
   const workers = useData((s) => s.workers);
+  const sales = useData((s) => s.sales);
+  const products = useData((s) => s.products);
+  const settings = useSettings();
 
   const todayServices = services.filter((s) => isToday(new Date(s.createdAt)));
-  const income = transactions.filter((t) => t.type === "income" && isToday(new Date(t.createdAt))).reduce((a, b) => a + b.amount, 0);
-  const expense = transactions.filter((t) => t.type === "expense" && isToday(new Date(t.createdAt))).reduce((a, b) => a + b.amount, 0);
+  const income = transactions.filter((tx) => tx.type === "income" && isToday(new Date(tx.createdAt))).reduce((a, b) => a + b.amount, 0);
+  const expense = transactions.filter((tx) => tx.type === "expense" && isToday(new Date(tx.createdAt))).reduce((a, b) => a + b.amount, 0);
   const profit = income - expense;
 
   const byWorker = workers.map((w) => {
@@ -31,28 +38,43 @@ function ReportsPage() {
     };
   });
 
-  const buildText = () => {
-    const lines = [
-      `📊 ${t("dailyReport")} — ${format(new Date(), "MMM d, yyyy")}`,
-      ``,
-      `${t("totalServices")}: ${todayServices.length}`,
-      `${t("totalEarned")}: ${formatRWF(income)}`,
-      `${t("totalSpent")}: ${formatRWF(expense)}`,
-      `${t("profit")}: ${formatRWF(profit)}`,
-      ``,
-      `👥 ${t("byWorker")}:`,
-      ...byWorker.map((b) => `- ${b.worker.name}: ${b.count} → ${formatRWF(b.total)} (${t("commissionAmount")}: ${formatRWF(b.commission)})`),
-    ];
-    return lines.join("\n");
+  const text = () =>
+    buildReportText({ settings, services, workers, transactions, sales, products });
+
+  const filename = () => `${(settings.salonName || "salon").replace(/\s+/g, "-")}-report-${format(new Date(), "yyyy-MM-dd")}.pdf`;
+
+  const exportPdf = () => {
+    const doc = buildDailyReportPDF({ settings, services, workers, transactions, sales, products });
+    doc.save(filename());
   };
 
   const sendEmail = () => {
-    const subject = encodeURIComponent(`${t("dailyReport")} — ${format(new Date(), "MMM d, yyyy")}`);
-    const body = encodeURIComponent(buildText());
-    window.open(`mailto:?subject=${subject}&body=${body}`);
+    if (!settings.ownerEmail) {
+      toast.error("Set the owner email in Settings first");
+      return;
+    }
+    const subject = encodeURIComponent(`${settings.salonName} — Daily Report — ${format(new Date(), "MMM d, yyyy")}`);
+    const body = encodeURIComponent(text());
+    window.open(`mailto:${settings.ownerEmail}?subject=${subject}&body=${body}`);
   };
+
   const sendWhatsApp = () => {
-    window.open(`https://wa.me/?text=${encodeURIComponent(buildText())}`, "_blank");
+    const num = settings.whatsappNumber.replace(/\D/g, "");
+    if (!num) {
+      toast.error("Set the WhatsApp number in Settings first");
+      return;
+    }
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(text())}`, "_blank");
+  };
+
+  const sendSMS = () => {
+    if (!settings.smsNumber) {
+      toast.error("Set the SMS number in Settings first");
+      return;
+    }
+    // Opens device SMS composer; works on mobile + most desktops
+    const body = encodeURIComponent(text());
+    window.open(`sms:${settings.smsNumber}?body=${body}`);
   };
 
   return (
@@ -60,13 +82,36 @@ function ReportsPage() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-3xl font-bold">{t("dailyReport")}</h1>
-          <p className="text-muted-foreground">{format(new Date(), "EEEE, MMM d, yyyy")}</p>
+          <p className="text-muted-foreground">{format(new Date(), "EEEE, MMM d, yyyy")} · {settings.salonName}</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="gap-2" onClick={sendEmail}><Mail className="h-4 w-4" />{t("sendEmail")}</Button>
-          <Button className="gap-2 bg-success text-success-foreground hover:bg-success/90" onClick={sendWhatsApp}><MessageCircle className="h-4 w-4" />{t("sendWhatsApp")}</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" className="gap-2" onClick={exportPdf}>
+            <FileDown className="h-4 w-4" />PDF
+          </Button>
+          <Button variant="outline" className="gap-2" onClick={sendEmail}>
+            <Mail className="h-4 w-4" />{t("sendEmail")}
+          </Button>
+          <Button className="gap-2 bg-success text-success-foreground hover:bg-success/90" onClick={sendWhatsApp}>
+            <MessageCircle className="h-4 w-4" />{t("sendWhatsApp")}
+          </Button>
+          <Button variant="outline" className="gap-2" onClick={sendSMS}>
+            <MessageSquare className="h-4 w-4" />SMS
+          </Button>
+          <Button asChild variant="ghost" size="icon" title="Settings">
+            <Link to="/app/settings"><SettingsIcon className="h-4 w-4" /></Link>
+          </Button>
         </div>
       </div>
+
+      {(!settings.ownerEmail || !settings.whatsappNumber || !settings.smsNumber) && (
+        <Card className="p-4 border-dashed">
+          <p className="text-sm">
+            Set recipients in{" "}
+            <Link to="/app/settings" className="text-primary underline">Settings</Link>{" "}
+            to enable Email, WhatsApp and SMS sending.
+          </p>
+        </Card>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="p-5"><div className="text-xs text-muted-foreground">{t("totalServices")}</div><div className="text-2xl font-bold">{todayServices.length}</div></Card>
@@ -105,7 +150,7 @@ function ReportsPage() {
 
       <Card className="p-6">
         <h2 className="font-semibold mb-3">Preview</h2>
-        <pre className="text-xs bg-muted p-4 rounded-md overflow-auto whitespace-pre-wrap font-mono">{buildText()}</pre>
+        <pre className="text-xs bg-muted p-4 rounded-md overflow-auto whitespace-pre-wrap font-mono">{text()}</pre>
       </Card>
     </div>
   );
