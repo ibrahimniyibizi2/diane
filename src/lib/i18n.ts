@@ -121,6 +121,28 @@ const dict = {
   to: { en: "To", rw: "Kugeza" },
   reset: { en: "Reset", rw: "Subiramo" },
   noResults: { en: "No shifts in this range", rw: "Nta gihe kibonetse" },
+  // POS & salary
+  pos: { en: "POS", rw: "POS" },
+  newSale: { en: "New sale", rw: "Igurisha rishya" },
+  client: { en: "Client", rw: "Umukiriya" },
+  clientName: { en: "Client name", rw: "Izina ry'umukiriya" },
+  walkIn: { en: "Walk-in", rw: "Uwaje" },
+  selectWorker: { en: "Select worker", rw: "Hitamo umukozi" },
+  addServiceLine: { en: "Add service", rw: "Ongeraho serivisi" },
+  addProductLine: { en: "Add product", rw: "Ongeraho igicuruzwa" },
+  qty: { en: "Qty", rw: "Ingano" },
+  unitPrice: { en: "Unit price", rw: "Igiciro" },
+  servicesTotal: { en: "Services total", rw: "Serivisi" },
+  productsTotal: { en: "Products total", rw: "Ibicuruzwa" },
+  grandTotal: { en: "Total", rw: "Igiteranyo" },
+  charge: { en: "Charge", rw: "Ishyura" },
+  saleRegistered: { en: "Sale registered", rw: "Igurisha ryanditswe" },
+  emptySale: { en: "Add at least one service or product", rw: "Ongeraho byibuze kimwe" },
+  payModel: { en: "Pay model", rw: "Uburyo bwo kwishyura" },
+  commissionModel: { en: "Commission", rw: "Komisiyo" },
+  salaryModel: { en: "Fixed salary", rw: "Umushahara uhoraho" },
+  salary: { en: "Salary", rw: "Umushahara" },
+  recentSales: { en: "Recent sales", rw: "Amaguro ya vuba" },
 } as const;
 
 export type TKey = keyof typeof dict;

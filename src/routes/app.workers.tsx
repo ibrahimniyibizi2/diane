@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useData, type Worker } from "@/lib/store";
-import { useT } from "@/lib/i18n";
+import { useT, formatRWF } from "@/lib/i18n";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,20 +15,28 @@ export const Route = createFileRoute("/app/workers")({
   component: WorkersPage,
 });
 
+const emptyForm: Omit<Worker, "id" | "createdAt"> = {
+  name: "",
+  phone: "",
+  role: "barber",
+  payModel: "commission",
+  commission: 40,
+  salary: 0,
+  paymentType: "daily",
+};
+
 function WorkersPage() {
   const t = useT();
   const workers = useData((s) => s.workers);
   const addWorker = useData((s) => s.addWorker);
   const removeWorker = useData((s) => s.removeWorker);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<Omit<Worker, "id" | "createdAt">>({
-    name: "", phone: "", role: "barber", commission: 40, paymentType: "daily",
-  });
+  const [form, setForm] = useState<Omit<Worker, "id" | "createdAt">>(emptyForm);
 
   const submit = () => {
     if (!form.name) return;
     addWorker(form);
-    setForm({ name: "", phone: "", role: "barber", commission: 40, paymentType: "daily" });
+    setForm(emptyForm);
     setOpen(false);
   };
 
@@ -56,7 +64,21 @@ function WorkersPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>{t("commission")}</Label><Input type="number" value={form.commission} onChange={(e) => setForm({ ...form, commission: Number(e.target.value) })} /></div>
+              <div>
+                <Label>{t("payModel")}</Label>
+                <Select value={form.payModel} onValueChange={(v: Worker["payModel"]) => setForm({ ...form, payModel: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="commission">{t("commissionModel")}</SelectItem>
+                    <SelectItem value="salary">{t("salaryModel")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {form.payModel === "commission" ? (
+                <div><Label>{t("commission")}</Label><Input type="number" value={form.commission} onChange={(e) => setForm({ ...form, commission: Number(e.target.value) })} /></div>
+              ) : (
+                <div><Label>{t("salary")} (RWF)</Label><Input type="number" value={form.salary} onChange={(e) => setForm({ ...form, salary: Number(e.target.value) })} /></div>
+              )}
               <div>
                 <Label>{t("paymentType")}</Label>
                 <Select value={form.paymentType} onValueChange={(v: Worker["paymentType"]) => setForm({ ...form, paymentType: v })}>
@@ -84,14 +106,23 @@ function WorkersPage() {
                 </div>
                 <div>
                   <div className="font-semibold">{w.name}</div>
-                  <Badge variant="secondary" className="mt-1">{t(w.role as any)}</Badge>
+                  <div className="flex gap-1 mt-1 flex-wrap">
+                    <Badge variant="secondary">{t(w.role as any)}</Badge>
+                    <Badge variant={w.payModel === "salary" ? "default" : "outline"}>
+                      {w.payModel === "salary" ? t("salaryModel") : t("commissionModel")}
+                    </Badge>
+                  </div>
                 </div>
               </div>
               <Button size="icon" variant="ghost" onClick={() => removeWorker(w.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
             </div>
             <div className="space-y-1 text-sm">
               <div className="flex items-center gap-2 text-muted-foreground"><Phone className="h-3 w-3" />{w.phone || "—"}</div>
-              <div className="flex justify-between"><span className="text-muted-foreground">{t("commission")}</span><span className="font-medium">{w.commission}%</span></div>
+              {w.payModel === "commission" ? (
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("commission")}</span><span className="font-medium">{w.commission}%</span></div>
+              ) : (
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("salary")}</span><span className="font-medium">{formatRWF(w.salary)}</span></div>
+              )}
               <div className="flex justify-between"><span className="text-muted-foreground">{t("paymentType")}</span><span className="font-medium">{t(w.paymentType as any)}</span></div>
             </div>
           </Card>
