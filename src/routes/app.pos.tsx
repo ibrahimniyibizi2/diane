@@ -72,8 +72,9 @@ function PosPage() {
       toast.error(t("emptySale"));
       return;
     }
+    const autoName = `Client-${Date.now().toString(36).slice(-5).toUpperCase()}`;
     addSale({
-      clientName: clientName.trim() || "Walk-in",
+      clientName: clientName.trim() || autoName,
       workerId,
       services: serviceLines.filter((s) => s.amount > 0),
       products: productLines.filter((p) => p.qty > 0),
