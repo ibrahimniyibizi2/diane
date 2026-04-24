@@ -103,11 +103,22 @@ function PosPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <Label className="flex items-center gap-1"><User className="h-3 w-3" />{t("clientName")}</Label>
-                <Input
-                  placeholder={t("walkIn")}
-                  value={clientName}
-                  onChange={(e) => setClientName(e.target.value)}
-                />
+                <div className="flex gap-2">
+                  <Input
+                    placeholder={t("walkIn")}
+                    value={clientName}
+                    onChange={(e) => setClientName(e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      setClientName(`Client-${Date.now().toString(36).slice(-5).toUpperCase()}`)
+                    }
+                  >
+                    <Plus className="h-4 w-4 mr-1" />ID
+                  </Button>
+                </div>
               </div>
               <div>
                 <Label>{t("worker")}</Label>
