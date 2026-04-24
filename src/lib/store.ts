@@ -9,12 +9,15 @@ export interface User {
   role: UserRole;
 }
 
+export type PayModel = "commission" | "salary";
 export interface Worker {
   id: string;
   name: string;
   phone: string;
   role: "barber" | "trancista" | "employee";
-  commission: number; // percentage
+  payModel: PayModel; // commission or fixed salary
+  commission: number; // percentage (used when payModel = commission)
+  salary: number; // fixed salary amount (used when payModel = salary)
   paymentType: "daily" | "weekly" | "monthly";
   createdAt: string;
 }
